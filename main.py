@@ -1,4 +1,5 @@
 import pygame
+from game import Puzzle
 
 
 def main() -> None:
