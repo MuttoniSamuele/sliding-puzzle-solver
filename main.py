@@ -14,6 +14,10 @@ SMALL_BTN_MARGIN = 16
 SMALL_BTN_SPAN = 50
 TILE_SIZE = 156
 TILE_MARGIN = 18
+TILES_CONTAINER_COL = colors.NEUTRAL_700
+TILE_BG_COL = colors.NEUTRAL_400,
+TILE_HOVER_COL =colors.NEUTRAL_300,
+TILE_ACTIVE_COL =colors.NEUTRAL_200
 
 
 BTN_STYLE = {
@@ -94,9 +98,6 @@ def main() -> None:
                 height=TILE_SIZE,
                 border_radius=8,
                 fg_color=colors.NEUTRAL_900,
-                bg_color=colors.NEUTRAL_400,
-                hover_bg_color=colors.NEUTRAL_300,
-                active_bg_color=colors.NEUTRAL_200
             ))
     # Main loop
     running = True
@@ -116,9 +117,21 @@ def main() -> None:
         # Exit if the user quits (necessary because sometimes pygame unsyncs)
         if not running:
             break
+        # Update the puzzle
+        for y in range(3):
+            for x in range(3):
+                btn = tiles_btns[y * 3 + x]
+                match puzzle.get_tile_at_coords(x, y):
+                    case None:
+                        btn.bg_color = btn.hover_bg_color = btn.active_bg_color = TILES_CONTAINER_COL
+                    case tile:
+                        btn.bg_color = TILE_BG_COL,
+                        btn.hover_bg_color = TILE_HOVER_COL,
+                        btn.active_bg_color = TILE_ACTIVE_COL
+                        btn.text = str(tile)
         # Draw the components
         screen.fill(colors.NEUTRAL_800)
-        pygame.draw.rect(screen, colors.NEUTRAL_700,
+        pygame.draw.rect(screen, TILES_CONTAINER_COL,
             (PUZZLE_MARGIN, PUZZLE_MARGIN, PUZZLE_SIZE, PUZZLE_SIZE),
             border_radius=10
         )

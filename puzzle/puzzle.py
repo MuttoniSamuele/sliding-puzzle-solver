@@ -28,6 +28,11 @@ class Puzzle:
                     return (x, y)
         return None
 
+    def get_tile_at_coords(self, x: int, y: int) -> int | None:
+        if not self._is_within_bounds(x, y):
+            return None
+        return self._puzzle[y][x]
+
     def calc_available_moves(self) -> list[tuple[int, int]]:
         moves: list[tuple[int, int]] = []
         empty_coords = self.get_tile_coords(None)
