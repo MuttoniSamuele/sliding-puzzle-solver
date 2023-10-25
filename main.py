@@ -42,6 +42,27 @@ SMALL_BTN_STYLE = {
 }
 
 
+def draw_tiles_container(screen: pygame.Surface) -> None:
+    pygame.draw.rect(screen, TILES_CONTAINER_COL,
+        (PUZZLE_MARGIN, PUZZLE_MARGIN, PUZZLE_SIZE, PUZZLE_SIZE),
+        border_radius=10
+    )
+
+
+def update_puzzle_tiles(tiles_btns: list[Button], puzzle: Puzzle) -> None:
+    for y in range(3):
+        for x in range(3):
+            btn = tiles_btns[y * 3 + x]
+            match puzzle.get_tile_at_coords(x, y):
+                case None:
+                    btn.bg_color = btn.hover_bg_color = btn.active_bg_color = TILES_CONTAINER_COL
+                case tile:
+                    btn.bg_color = TILE_BG_COL,
+                    btn.hover_bg_color = TILE_HOVER_COL,
+                    btn.active_bg_color = TILE_ACTIVE_COL
+                    btn.text = str(tile)
+
+
 def main() -> None:
     pygame.init()
     # Initialize the puzzle
@@ -117,24 +138,11 @@ def main() -> None:
         # Exit if the user quits (necessary because sometimes pygame unsyncs)
         if not running:
             break
-        # Update the puzzle
-        for y in range(3):
-            for x in range(3):
-                btn = tiles_btns[y * 3 + x]
-                match puzzle.get_tile_at_coords(x, y):
-                    case None:
-                        btn.bg_color = btn.hover_bg_color = btn.active_bg_color = TILES_CONTAINER_COL
-                    case tile:
-                        btn.bg_color = TILE_BG_COL,
-                        btn.hover_bg_color = TILE_HOVER_COL,
-                        btn.active_bg_color = TILE_ACTIVE_COL
-                        btn.text = str(tile)
+        # Update the components
+        update_puzzle_tiles(tiles_btns, puzzle)
         # Draw the components
         screen.fill(colors.NEUTRAL_800)
-        pygame.draw.rect(screen, TILES_CONTAINER_COL,
-            (PUZZLE_MARGIN, PUZZLE_MARGIN, PUZZLE_SIZE, PUZZLE_SIZE),
-            border_radius=10
-        )
+        draw_tiles_container(screen)
         edit_btn.draw()
         solve_btn.draw()
         back_btn.draw()
