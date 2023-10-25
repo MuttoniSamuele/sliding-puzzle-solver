@@ -34,12 +34,17 @@ class Button(Component):
         self.width = width
         self.height = height
         self.border_radius = border_radius
+        self.fg_color = fg_color
         self.bg_color = bg_color
         self.hover_bg_color = hover_bg_color
         self.active_bg_color = active_bg_color
+        self.text = text
+        self.font = font
         # State
-        self._text = None if text is None or font is None else font.render(text, True, fg_color)
         self._is_pressed = False
+
+    def _render_font(self) -> Surface:
+        return None if self.text is None or self.font is None else self.font.render(self.text, True, self.fg_color)
 
     def _is_mouse_hover(self) -> bool:
         m_x, m_y = pygame.mouse.get_pos()
@@ -68,9 +73,10 @@ class Button(Component):
             (self.x, self.y, self.width, self.height),
             border_radius=self.border_radius
         )
-        if self._text is not None:
-            txt_w, txt_h = self._text.get_size()
-            self._screen.blit(self._text, (
+        text_surf = self._render_font()
+        if text_surf is not None:
+            txt_w, txt_h = text_surf.get_size()
+            self._screen.blit(text_surf, (
                 self.x + self.width / 2 - txt_w / 2,
                 self.y + self.height / 2 - txt_h / 2
             ))
