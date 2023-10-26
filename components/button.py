@@ -3,6 +3,8 @@ from pygame import Surface, Color
 from pygame.event import Event
 from pygame.font import Font, SysFont
 
+from typing import Callable
+
 from .component import Component
 
 
@@ -24,10 +26,12 @@ class Button(Component):
         hover_bg_color: Color = (200, 200, 200),
         active_bg_color: Color = (100, 100, 100),
         text: str | None = None,
-        font: Font = SysFont("Calibri", 18)
+        font: Font = SysFont("Calibri", 18),
+        callback: Callable[[], None] | None = None
     ) -> None:
         super().__init__(screen)
         self._screen = screen
+        self.callback = callback
         # Properties
         self.x = x
         self.y = y
@@ -42,6 +46,7 @@ class Button(Component):
         self.font = font
         # State
         self._is_pressed = False
+        self._last_pressed = False
 
     def _render_font(self) -> Surface:
         return None if self.text is None or self.font is None else self.font.render(self.text, True, self.fg_color)
@@ -60,6 +65,11 @@ class Button(Component):
                     self._is_pressed = self._is_mouse_hover()
                 case pygame.MOUSEBUTTONUP:
                     self._is_pressed = False
+        if self._is_pressed and not self._last_pressed:
+            self.callback and self.callback()
+            self._last_pressed = True
+        if not self._is_pressed and self._last_pressed:
+            self._last_pressed = False
 
     def draw(self) -> None:
         bg_color: Color = self.bg_color
