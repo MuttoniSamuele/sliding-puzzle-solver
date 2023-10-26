@@ -73,6 +73,11 @@ def draw_tiles_container(screen: pygame.Surface) -> None:
     )
 
 
+
+def draw_progress_text(screen: pygame.Surface, x: int, y: int, font: pygame.font.Font, is_solving: bool) -> None:
+    surf = font.render("Status: " + ("solving..." if is_solving else "solved"), True, colors.NEUTRAL_200)
+    screen.blit(surf, (x, y))
+
 def update_puzzle_tiles(
     tiles_btns: list[Button],
     puzzle: Puzzle,
@@ -116,9 +121,10 @@ def main() -> None:
     # Define the callabacks for the buttons
 
     def handle_edit() -> None:
-        nonlocal is_editing, solver_thread
+        nonlocal is_editing, solver_thread, solution_step
         is_editing = True
         solver_thread = SolverThread(puzzle)
+        solution_step = 0
 
     def handle_solve() -> None:
         solver_thread.start_once()
@@ -194,6 +200,7 @@ def main() -> None:
                 fg_color=colors.NEUTRAL_900,
                 callback=tile_click_handler_factory(x, y)
             ))
+    progress_font = pygame.font.SysFont("Calibri", 20)
 
     # Main loop
     running = True
@@ -226,6 +233,13 @@ def main() -> None:
         solve_btn.draw()
         back_btn.draw()
         forward_btn.draw()
+        draw_progress_text(
+            screen,
+            btn_base_x,
+            back_btn.y + BTN_HEIGHT + 30,
+            progress_font,
+            solver_thread.is_alive()
+        )
         [btn.draw() for btn in tiles_btns]
         pygame.display.update()
 
