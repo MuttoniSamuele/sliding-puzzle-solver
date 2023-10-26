@@ -11,8 +11,8 @@ PUZZLE_MARGIN = 30
 BIG_BTN_WIDTH = 170
 BTN_HEIGHT = 28
 BIG_BTN_SPAN = 15
-SMALL_BTN_WIDTH = 46
-SMALL_BTN_MARGIN = 16
+SMALL_BTN_WIDTH = 70
+SMALL_BTN_MARGIN = 30
 SMALL_BTN_SPAN = 50
 TILE_SIZE = 156
 TILE_MARGIN = 18
@@ -92,9 +92,6 @@ def main() -> None:
 
     # Initialize the puzzle
     puzzle = Puzzle(3)
-    puzzle.move_tile(1, 2)
-    puzzle.move_tile(0, 2)
-    puzzle.move_tile(0, 1)
     solution_step = 0
     solver_thread = SolverThread(puzzle)
 
@@ -113,9 +110,6 @@ def main() -> None:
     def handle_back() -> None:
         nonlocal solution_step
         solution_step = max(0, solution_step - 1)
-
-    def handle_play() -> None:
-        pass
 
     def handle_forward() -> None:
         if solver_thread.solution is None:
@@ -149,18 +143,10 @@ def main() -> None:
         callback=handle_back,
         **SMALL_BTN_STYLE
     )
-    play_btn = Button(
-        screen,
-        text="Play",
-        x=back_btn.x + SMALL_BTN_WIDTH + SMALL_BTN_MARGIN,
-        y=back_btn.y,
-        callback=handle_play,
-        **SMALL_BTN_STYLE
-    )
     forward_btn = Button(
         screen,
         text=">",
-        x=play_btn.x + SMALL_BTN_WIDTH + SMALL_BTN_MARGIN,
+        x=back_btn.x + SMALL_BTN_WIDTH + SMALL_BTN_MARGIN,
         y=back_btn.y,
         callback=handle_forward,
         **SMALL_BTN_STYLE
@@ -195,7 +181,6 @@ def main() -> None:
         edit_btn.update_events(events)
         solve_btn.update_events(events)
         back_btn.update_events(events)
-        play_btn.update_events(events)
         forward_btn.update_events(events)
         [btn.update_events(events) for btn in tiles_btns]
         # Exit if the user quits (necessary because sometimes pygame unsyncs)
@@ -212,7 +197,6 @@ def main() -> None:
         edit_btn.draw()
         solve_btn.draw()
         back_btn.draw()
-        play_btn.draw()
         forward_btn.draw()
         [btn.draw() for btn in tiles_btns]
         pygame.display.update()
