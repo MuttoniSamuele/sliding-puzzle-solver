@@ -1,6 +1,7 @@
 import pygame
 
 from threading import Thread
+from typing import Callable
 
 from puzzle import Puzzle
 from components import Button, colors
@@ -72,28 +73,41 @@ def draw_tiles_container(screen: pygame.Surface) -> None:
     )
 
 
-def update_puzzle_tiles(tiles_btns: list[Button], puzzle: Puzzle) -> None:
+def update_puzzle_tiles(
+    tiles_btns: list[Button],
+    puzzle: Puzzle,
+    is_editing: bool,
+    selected_tile: tuple[int, int] | None
+) -> None:
     for y in range(3):
         for x in range(3):
             btn = tiles_btns[y * 3 + x]
-            match puzzle.get_tile_at_coords(x, y):
+            is_selected = selected_tile is not None and selected_tile == (x, y)
+            tile = puzzle.get_tile_at_coords(x, y)
+            if is_editing:
+                btn.bg_color = TILE_ACTIVE_COL if is_selected else TILE_BG_COL,
+                btn.hover_bg_color = TILE_ACTIVE_COL if is_selected else TILE_HOVER_COL,
+                btn.active_bg_color = TILE_ACTIVE_COL
+            match tile:
                 case None:
-                    btn.bg_color = btn.hover_bg_color = btn.active_bg_color = TILES_CONTAINER_COL
                     btn.text = ""
+                    if not is_editing:
+                        btn.bg_color = btn.hover_bg_color = btn.active_bg_color = TILES_CONTAINER_COL
                 case tile:
-                    btn.bg_color = TILE_BG_COL,
-                    btn.hover_bg_color = TILE_HOVER_COL,
-                    btn.active_bg_color = TILE_ACTIVE_COL
                     btn.text = str(tile)
+                    if not is_editing:
+                        btn.bg_color = btn.hover_bg_color = btn.active_bg_color = TILE_BG_COL
 
 
 def main() -> None:
     pygame.init()
 
-    # Initialize the puzzle
+    # Initialize the puzzle and utility
     puzzle = Puzzle(3)
     solution_step = 0
     solver_thread = SolverThread(puzzle)
+    is_editing = False
+    selected_tile: tuple[int, int] | None = None
 
     # Create the window
     pygame.display.set_caption("Sliding Puzzle Solver")
@@ -102,7 +116,9 @@ def main() -> None:
     # Define the callabacks for the buttons
 
     def handle_edit() -> None:
-        pass
+        nonlocal is_editing, solver_thread
+        is_editing = True
+        solver_thread = SolverThread(puzzle)
 
     def handle_solve() -> None:
         solver_thread.start_once()
@@ -116,6 +132,19 @@ def main() -> None:
             return
         nonlocal solution_step
         solution_step = min(solution_step + 1, len(solver_thread.solution) - 1)
+
+    def tile_click_handler_factory(x: int, y: int) -> Callable[[], None]:
+        def handle_click() -> None:
+            nonlocal is_editing, selected_tile
+            if not is_editing:
+                return
+            if selected_tile is None:
+                selected_tile = (x, y)
+                return
+            puzzle.swap_tiles(x, y, *selected_tile)
+            selected_tile = None
+            is_editing = False
+        return handle_click
 
     # Create the components
     btn_base_x = PUZZLE_SIZE + PUZZLE_MARGIN*2
@@ -154,9 +183,6 @@ def main() -> None:
     tiles_btns: list[Button] = []
     for y in range(3):
         for x in range(3):
-            def handle_click() -> None:
-                pass
-
             tiles_btns.append(Button(
                 screen,
                 font=pygame.font.SysFont("Arial", 64),
@@ -166,7 +192,7 @@ def main() -> None:
                 height=TILE_SIZE,
                 border_radius=8,
                 fg_color=colors.NEUTRAL_900,
-                callback=handle_click
+                callback=tile_click_handler_factory(x, y)
             ))
 
     # Main loop
@@ -189,7 +215,9 @@ def main() -> None:
         # Update the components
         update_puzzle_tiles(
             tiles_btns,
-            puzzle if solver_thread.solution is None else solver_thread.solution[solution_step]
+            puzzle if solver_thread.solution is None else solver_thread.solution[solution_step],
+            is_editing,
+            selected_tile
         )
         # Draw the components
         screen.fill(colors.NEUTRAL_800)
